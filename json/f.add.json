@@ -19,7 +19,7 @@
   { "name": "2-bit full adder Cin, A0, B0, A1, B1 -> Sum0, Sum1, Cout",
     "alice": [1, 2, 12],
     "bob":   [3, 13],
-    "out":   [5, 18, 15],
+    "out":   [5, 15, 18],
     "gates": [ 
       { "id":4,  "type":"XOR", "in": [2, 3] },
       { "id":5,  "type":"XOR", "in": [1, 4] }, 

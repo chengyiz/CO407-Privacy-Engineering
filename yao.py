@@ -91,7 +91,7 @@ class Circuit:
         
         gates = []
         for i, gate in enumerate(circuit['gates']):
-            print(gate)
+            #print(gate)
             if gate['type'] == 'NOT':
                 print("blblblblblb")
                 gates.append(Gate(gate['id'], inwire_1=wires[gate['in'][0]-1], outwire=wires[gate['id']-1],gate_type=gate['type']))
@@ -99,6 +99,10 @@ class Circuit:
                 gates.append(Gate(gate['id'], wires[gate['in'][0]-1], wires[gate['id']-1], gate['type'], wires[gate['in'][1]-1]))
         
         self.gates = gates
+        outs = []
+        for idx in circuit['out']:
+            outs.append(self.wires[idx-1])
+        self.outs = outs
         
         #for wire in wires:
             #print(wire)
@@ -107,6 +111,8 @@ class Circuit:
             
     def evaluate(self, alice_input, bob_input=[]):
         if self.alice:
+            print(self.alice)
+            print(alice_input)            
             for i in range(len(self.alice)):
                 self.wires[self.alice[i]-1].set_value(alice_input[i], True)
                 #print(self.wires[self.alice[i]-1])
@@ -117,16 +123,22 @@ class Circuit:
                 self.wires[self.bob[i]-1].set_value(bob_input[i], True)
                 #print(self.wires[self.bob[i]-1])
         
-        for wire in self.wires:
-            print(wire)
+        #for wire in self.wires:
+            #print(wire)
                     
         for gate in self.gates:
             gate.set_out()
         
         #for wire in self.wires:
             #print(wire)
-        print("Alice =[1,2] = {}, Bob[1,2] = {}, Output = {}".format(alice_input, bob_input, self.gates[-1].outwire.ext_value ^ self.gates[-1].outwire.p))
-        return self.gates[-1].outwire.ext_value ^ self.gates[-1].outwire.p
+        
+        result = []
+        for out in self.outs:
+            result.append(out.ext_value ^ out.p)
+        
+        print("Alice =[1,2] = {}, Bob[1,2] = {}, Output = {}".format(alice_input, bob_input, result))
+           
+        return result
                 
         
     

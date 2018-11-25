@@ -34,7 +34,7 @@ def local_test(filename):
   with open(filename) as json_file:
     json_circuits = json.load(json_file)
 
-  for json_circuit in json_circuits['circuits']:
+  for json_circuit in json_circuits['circuits'][0:1]:
     print("------------"+json_circuit['name'] +"----------")
     circuit = yao.Circuit(json_circuit)
     #circuit.evaluate([1,0],[1,0])
