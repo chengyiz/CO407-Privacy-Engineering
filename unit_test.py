@@ -20,7 +20,7 @@ class TestGarbledCircuit(unittest.TestCase):
                             exp = [(a&c) | (b^d)]
                             circuit = yao.Circuit(json_circuit)                    
                             act = circuit.evaluate([a,b], [c,d])
-                            self.assertEqual(act, exp, str(a)+str(b)+str(c)+str(d))
+                            self.assertEqual(act,exp,str(a)+str(b)+str(c)+str(d))
                             
                             
     def test_bool(self):
@@ -75,7 +75,7 @@ class TestGarbledCircuit(unittest.TestCase):
                             circuit = yao.Circuit(json_circuit) 
                             act = circuit.evaluate([a,b], [c,d])
                             exp = max([a,b],[c,d])
-                            self.assertEqual(act, exp, str(a)+str(b)+str(c)+str(d))
+                            self.assertEqual(act,exp,str(a)+str(b)+str(c)+str(d))
                             
     
     def test_nand(self):
@@ -130,8 +130,8 @@ class TestGarbledCircuit(unittest.TestCase):
                             circuit = yao.Circuit(json_circuit) 
                             act = circuit.evaluate([a,b], [c,d])
                             exp = min([a,b],[c,d])
-                            print("exp={}".format(exp))
-                            self.assertEqual(act, exp, str(a)+str(b)+str(c)+str(d)) 
+                            #print("exp={}".format(exp))
+                            self.assertEqual(act,exp,str(a)+str(b)+str(c)+str(d)) 
                             
     def test_add_1(self):
         with open("./json/f.add.json") as json_file:
@@ -147,7 +147,7 @@ class TestGarbledCircuit(unittest.TestCase):
                         circuit = yao.Circuit(json_circuit) 
                         act = circuit.evaluate([a,b], [c])
                         exp = [a^(b^c), (b&c) | (a&(b^c))]
-                        print("exp={}".format(exp))
+                        #print("exp={}".format(exp))
                         self.assertEqual(act, exp, str(a)+str(b)+str(c))       
                     
     def test_add_2(self):
@@ -171,7 +171,7 @@ class TestGarbledCircuit(unittest.TestCase):
                         act = circuit.evaluate(a_input, b_input)
                         exp = bits(a+b+c,3)
                         exp.reverse()
-                        print("a={},b={},c={},exp={}".format(a,b,c,exp))
+                        #print("a={},b={},c={},exp={}".format(a,b,c,exp))
                         self.assertEqual(act, exp, str(a)+str(b)) 
                         
     def test_cmp(self):
@@ -194,7 +194,7 @@ class TestGarbledCircuit(unittest.TestCase):
                         exp = bits(1,2)
                     elif a<b:
                         exp = bits(3,2)
-                    print("a={},b={},exp={}".format(a,b,exp))
+                    #print("a={},b={},exp={}".format(a,b,exp))
                     self.assertEqual(act, exp, str(a)+str(b))      
 
 
