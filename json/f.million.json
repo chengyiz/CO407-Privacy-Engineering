@@ -1,0 +1,23 @@
+
+{ "+": "yao garbled circuit 2-bit Millionaires problem,  2018, by Chengyi Zhang cz5818 & Rui Jia rj418",
+
+  "circuits" : [
+
+  { "name": "2-bit Millionaires problem - Chengyi & Rui",
+    "alice":  [1, 2],
+    "bob":    [3, 4],
+    "out":    [19],
+    "gates": [ 
+      { "id":11, "type":"NOT",  "in":[1] },
+      { "id":12, "type":"NAND", "in":[11, 3] },
+      { "id":13, "type":"NOR", "in":[1, 2] },
+      { "id":14, "type":"NAND", "in":[13, 4] },
+      { "id":15, "type":"AND", "in":[3, 4] },
+      { "id":16, "type":"NOT", "in":[2] },
+      { "id":17, "type":"NAND", "in":[15, 16] },
+      { "id":18, "type":"AND",  "in":[12, 14] },
+      { "id":19, "type":"AND",  "in":[17, 18] }
+    ]
+ }
+
+] } 

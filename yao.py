@@ -1,4 +1,5 @@
-
+# Chengyi Zhang cz5818
+# Rui Jia rj418
 # yao garbled circuit evaluation v1. simple version based on smart
 # naranker dulay, dept of computing, imperial college, october 2018
 import random
@@ -7,20 +8,23 @@ import crypto
 
 class Wire:
     def __init__(self, index):
-        self.index = index
-        self.keys = [crypto.generate_key(), crypto.generate_key()]
-        self.p = random.randint(0,1)
-        self.ext_value = None
+        self.index = index # id
+        self.keys = [crypto.generate_key(), crypto.generate_key()] # two keys
+        self.p = random.randint(0,1) # generate randomly
+        self.ext_value = None # not evaluated yet
         
     def set_value(self, value, xor):
-        self.ext_value = (value ^ self.p) if xor==True else value
+        # use xor'ed value for in and out is more convenient
+        self.ext_value = (value ^ self.p) if xor==True else value 
         
     def clean(self):
+        # remove info that Bob has no access to
         self.keys = [None, None]
         self.p = None
         self.ext_value = None
         
     def set_key(self, key):
+        # set the real key looked up by Bob
         self.real_key = key
         
     def __str__(self):
@@ -32,6 +36,8 @@ class Wire:
         
         
 class Gate:
+    
+    # At least one input for the gate
     def __init__(self, ID, inwire_1, outwire, gate_type, inwire_2=None):
         self.ID = ID
         self.inwire_1 = inwire_1
@@ -42,6 +48,9 @@ class Gate:
         self.outwire = outwire
         
         result = {}
+        # generate the truth table
+        # for any real input values, encrypt the output key and xor'ed value
+        # then assign the encrypted value to the corresponding xor'ed input
         if gate_type == 'NOT':
             for a in [0,1]:
                 first = a ^ self.inwire_1.p
@@ -73,10 +82,10 @@ class Gate:
                                        self.inwire_2.keys[b])
         self.table =  result
         
+    # Look up table, decrypt and get correct key and xor'ed value of output wire 
     def set_out(self):
         key = str(self.inwire_1.ext_value) + str(self.inwire_2.ext_value) \
             if self.gate != 'NOT' else str(self.inwire_1.ext_value) 
-        print("key",key)
         unknown = self.table[key]
         wire1 = self.inwire_1
         key_idx = wire1.ext_value ^ wire1.p
@@ -85,22 +94,18 @@ class Gate:
         else:
             wire2 = self.inwire_2
             key_idx_1 = wire2.ext_value ^ wire2.p
-            print(wire1.index, wire1.keys[key_idx])
-            print(wire2.index, wire2.keys[key_idx_1])
             (key, value) = crypto.decrypt(unknown, \
                                    wire1.keys[key_idx], wire2.keys[key_idx_1])
         self.outwire.set_value(value, False)
         
+    # Similar to the one above, only does not need the p-bits and original keys
     def set_out_secure(self):
         key = str(self.inwire_1.ext_value) + str(self.inwire_2.ext_value) \
             if self.gate != 'NOT' else str(self.inwire_1.ext_value)  
-        print("key",key)
         unknown = self.table[key]
         if self.gate == 'NOT':
             (key, value) = crypto.decrypt(unknown, self.inwire_1.real_key)
         else:
-            print(self.inwire_1.index, self.inwire_1.real_key)
-            print(self.inwire_2.index, self.inwire_2.real_key)
             (key, value) = crypto.decrypt(unknown, self.inwire_1.real_key, \
                                           self.inwire_2.real_key)
         self.outwire.set_value(value, False)
@@ -131,9 +136,7 @@ class Circuit:
         
         gates = []
         for i, gate in enumerate(circuit['gates']):
-            #print(gate)
             if gate['type'] == 'NOT':
-                #print("blblblblblb")
                 gates.append(Gate(gate['id'], inwire_1=wires[gate['in'][0]-1], \
                                   outwire=wires[gate['id']-1], \
                                   gate_type=gate['type']))
@@ -147,38 +150,24 @@ class Circuit:
         for idx in circuit['out']:
             outs.append(self.wires[idx-1])
         self.outs = outs
-        
-        #for wire in wires:
-            #print(wire)
-        #for gate in gates:
-            #print(gate)
             
     def evaluate(self, alice_input, bob_input=[]):
         if self.alice:          
             for i in range(len(self.alice)):
                 self.wires[self.alice[i]-1].set_value(alice_input[i], False)
-                #print(self.wires[self.alice[i]-1])
         if self.bob:
 
             assert bob_input!=[], "Need input from Bob"
             for i in range(len(self.bob)):
                 self.wires[self.bob[i]-1].set_value(bob_input[i], False)
-                #print(self.wires[self.bob[i]-1])
-        
-        for wire in self.wires:
-            print(wire)
                     
         for gate in self.gates:
-            print(gate.ID)
             gate.set_out()
-        
-        #for wire in self.wires:
-            #print(wire)
         
         result = []
         for out in self.outs:
             result.append(out.ext_value ^ out.p)
-        print("Alice =[1,2] = {}, Bob[1,2] = {}, Output = {}".format(alice_input, bob_input, result))
+        print("Alice[1,2] = {}, Bob[1,2] = {}, Output = {}".format(alice_input, bob_input, result))
         return result    
     
     def evaluate_secure(self, alice_input, alice_keys, bob_input=[], bob_keys=[]):
@@ -192,16 +181,9 @@ class Circuit:
             for i in range(len(self.bob)):
                 self.wires[self.bob[i]-1].set_value(bob_input[i], False)
                 self.wires[self.bob[i]-1].set_key(bob_keys[i])
-        
-        for wire in self.wires:
-            print(wire)
-                    
+              
         for gate in self.gates:
-            print(gate.ID)
             gate.set_out_secure()
-        
-        #for wire in self.wires:
-            #print(wire)
         
         result = []
         for out in self.outs:
