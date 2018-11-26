@@ -3,11 +3,12 @@
 # naranker dulay, dept of computing, imperial college, october 2018
 import random
 import json
+import crypto
 
 class Wire:
     def __init__(self, index):
         self.index = index
-        # keys = [0 ,1 ]
+        self.keys = [crypto.generate_key(), crypto.generate_key()]
         self.p = random.randint(0,1)
         self.ext_value = None
         
@@ -35,7 +36,8 @@ class Gate:
         if gate_type == 'NOT':
             for a in [0,1]:
                 first = a ^ self.inwire_1.p
-                result[str(first)] = (1-a) ^ self.outwire.p
+                value = (1-a) ^ self.outwire.p
+                result[str(first)] = crypto.encrypt(value, self.inwire_1.keys[a])
         else:
             for a in [0, 1]:
                 for b in [0, 1]: 
@@ -54,18 +56,31 @@ class Gate:
                     elif gate_type == 'XNOR':
                         o_ab = not (a ^ b)
                     
-                    result[str(first)+str(second)] = o_ab ^ self.outwire.p
+                    value = o_ab ^ self.outwire.p
+                    result[str(first)+str(second)] = \
+                        crypto.encrypt(value, self.inwire_1.keys[a], \
+                                       self.inwire_2.keys[b])
         self.table =  result
         
     def set_out(self):
-        print(self.ID, self.inwire_1)
-        print(self.ID, self.inwire_2)
-        print(self.ID, self.table)
+        #print(self.ID, self.inwire_1)
+        #print(self.ID, self.inwire_2)
+        #print(self.ID, self.table)
         key = str(self.inwire_1.ext_value) + str(self.inwire_2.ext_value) \
-            if self.gate != 'NOT' else str(self.inwire_1.ext_value)
-        #print("key: " + key)
-        self.outwire.set_value(self.table[key], False)
-        print(self.ID, self.outwire)
+            if self.gate != 'NOT' else str(self.inwire_1.ext_value)  
+        unknown = self.table[key]
+        wire1 = self.inwire_1
+        key_idx = wire1.ext_value ^ wire1.p
+        if self.gate == 'NOT':
+            value = crypto.decrypt(unknown, wire1.keys[key_idx])
+        else:
+            wire2 = self.inwire_2
+            key_idx_1 = wire2.ext_value ^ wire2.p
+            value = crypto.decrypt(unknown, \
+                                   wire1.keys[key_idx], wire2.keys[key_idx_1])
+        #value = self.table[key]
+        self.outwire.set_value(value, False)
+        #print(self.ID, self.outwire)
                 
     def __str__(self):
         if self.gate == 'NOT':
@@ -110,9 +125,7 @@ class Circuit:
             #print(gate)
             
     def evaluate(self, alice_input, bob_input=[]):
-        if self.alice:
-            print(self.alice)
-            print(alice_input)            
+        if self.alice:          
             for i in range(len(self.alice)):
                 self.wires[self.alice[i]-1].set_value(alice_input[i], True)
                 #print(self.wires[self.alice[i]-1])
