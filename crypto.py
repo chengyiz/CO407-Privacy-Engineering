@@ -16,6 +16,7 @@ if ENCRYPTED: #_____________________________________________________________
     
     def encrypt(key, secret, key1, key2=None):
         key1 = Fernet(key1)
+        # Combine and then encrypt
         secret = key+bytes([secret])
         if key2==None:
             return key1.encrypt(secret)
@@ -28,7 +29,9 @@ if ENCRYPTED: #_____________________________________________________________
             secret = key1.decrypt(unknown)
         else:
             key2 = Fernet(key2)
+            # Note that the order of decryption matters
             secret = key2.decrypt(key1.decrypt(unknown))
+        # Split after decrypt
         return (secret[:-1], secret[-1])
         #return int.from_bytes(secret, byteorder='big')
 

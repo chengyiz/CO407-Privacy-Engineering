@@ -130,11 +130,14 @@ class Circuit:
         self.bob = circuit['bob'] if 'bob' in circuit else []
         wire_ids = find_wires(circuit)
         wires = []
+        # Create wires from the lowest id to the highest, do not care about 
+        # the useless ones
         for i in range(max(wire_ids)):
             wires.append(Wire(i+1))
         self.wires = wires
         
         gates = []
+        # Create the gates
         for i, gate in enumerate(circuit['gates']):
             if gate['type'] == 'NOT':
                 gates.append(Gate(gate['id'], inwire_1=wires[gate['in'][0]-1], \
@@ -151,49 +154,61 @@ class Circuit:
             outs.append(self.wires[idx-1])
         self.outs = outs
             
+    # Evaluate the output with certain input using the original table
+    # Use for tests
     def evaluate(self, alice_input, bob_input=[]):
+        # Set the ext_value for the input wires
         if self.alice:          
             for i in range(len(self.alice)):
                 self.wires[self.alice[i]-1].set_value(alice_input[i], False)
         if self.bob:
-
             assert bob_input!=[], "Need input from Bob"
             for i in range(len(self.bob)):
                 self.wires[self.bob[i]-1].set_value(bob_input[i], False)
-                    
+               
+        # For each gate, use the input ext_values to get (key, ext_value) pair
+        # And apply to the output wire
         for gate in self.gates:
             gate.set_out()
         
         result = []
+        # Collect the ext_value of the output wire of the output gates
+        # Xor them with corresponding p-bit and get real result
         for out in self.outs:
             result.append(out.ext_value ^ out.p)
-        print("Alice[1,2] = {}, Bob[1,2] = {}, Output = {}".format(alice_input, bob_input, result))
+        #print("Alice[1,2] = {}, Bob[1,2] = {}, Output = {}".format(alice_input, bob_input, result))
         return result    
     
+    # Evaluate the output with certain input using the clean table sent to Bob
     def evaluate_secure(self, alice_input, alice_keys, bob_input=[], bob_keys=[]):
+        # Set the ext_value for the input wires
         if self.alice:          
             for i in range(len(self.alice)):
                 self.wires[self.alice[i]-1].set_value(alice_input[i], False)
                 self.wires[self.alice[i]-1].set_key(alice_keys[i])
-                
         if self.bob:
             assert bob_input!=[], "Need input from Bob"
             for i in range(len(self.bob)):
                 self.wires[self.bob[i]-1].set_value(bob_input[i], False)
                 self.wires[self.bob[i]-1].set_key(bob_keys[i])
-              
+            
+        # For each gate, use the input ext_values to look up the table and get 
+        # (key, ext_value) pair. Then apply to the output wire        
         for gate in self.gates:
             gate.set_out_secure()
         
         result = []
+        # Collect the ext_value of the output wire of the output gates       
         for out in self.outs:
             result.append(out.ext_value)
         return result            
     
+    # Remove info that Bob has no access to
     def clean(self):
         for wire in self.wires:
             wire.clean()
     
+# Find all wires in a json_circuit object
 def find_wires(circuit_dict):
     wires = []
     for key in circuit_dict:
